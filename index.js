@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fileUpload = require('express-fileupload');
+const converter = require('docx-pdf');
 const { exec } = require('child_process');
 
 const app = express();
@@ -23,6 +24,8 @@ app.post('/print', (req, res) => {
 
     let file = req.files.myfile;
 
+    // replace space with underscore
+
     file.name = file.name.replace(/ /g, "_");
 
     // move to files folder
@@ -35,6 +38,21 @@ app.post('/print', (req, res) => {
         } else {
 
             console.log("A file has been uploaded");
+
+            // check for word documents and convert them to pdf
+
+            if (file.name.search('*.docx') != -1) {
+
+                file.name = 'converted.pdf';
+
+                converter(`./files/${file.name}`, './files/converted.pdf', (err, result) => {
+
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log('Converted docx-file to pdf');
+                });
+            }
 
             // print the file
 
