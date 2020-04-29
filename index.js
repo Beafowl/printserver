@@ -40,6 +40,7 @@ app.post('/print', (req, res) => {
             console.log("A file has been uploaded");
 
             // check for word documents and convert them to pdf
+            // TODO: expand with https://www.convertapi.com/docx-to-pdf
 
             if (file.name.search('*.docx') != -1) {
 
