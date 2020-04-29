@@ -4,7 +4,7 @@ const fileUpload = require('express-fileupload');
 const { exec } = require('child_process');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 80;
 
 app.use(fileUpload());
 
@@ -22,6 +22,8 @@ app.post('/print', (req, res) => {
     // fetch file
 
     let file = req.files.myfile;
+
+    file.name = file.name.replace(/ /g, "_");
 
     // move to files folder
 
