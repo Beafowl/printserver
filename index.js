@@ -1,8 +1,10 @@
-const express = require('express');
-const path = require('path');
-const fileUpload = require('express-fileupload');
-const converter = require('docx-pdf');
-const { exec } = require('child_process');
+const express = require("express");
+const path = require("path");
+const fileUpload = require("express-fileupload");
+const { secret } = require("./config");
+const convertapi = require("convertapi")(secret);
+const fs = require("fs");
+const { exec } = require("child_process");
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -11,69 +13,67 @@ app.use(fileUpload());
 
 // index.html
 
-app.get('/', (req, res) => {
-
-    res.sendFile(path.join(__dirname, '/index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "/index.html"));
 });
 
 // print document
 
-app.post('/print', (req, res) => {
+app.post("/print", (req, res) => {
+  // check if files folder exists
 
-    // fetch file
+  const dirToCreate = path.join(__dirname, "files");
 
-    let file = req.files.myfile;
+  if (!fs.existsSync(dirToCreate)) {
+    fs.mkdirSync(dirToCreate);
+  }
 
-    // replace space with underscore
+  // fetch file
 
-    file.name = file.name.replace(/ /g, "_");
+  let file = req.files.myfile;
 
-    // move to files folder
+  // replace space with underscore
 
-    file.mv("./files/" + file.name, (err) => {
+  file.name = file.name.replace(/ /g, "_");
 
-        if (err) {
-            console.log(err);
-            res.status(400).send("Ein Fehler ist aufgetreten");
-        } else {
+  // move to files folder
 
-            console.log("A file has been uploaded");
+  file.mv("./files/" + file.name, (err) => {
+    if (err) {
+      console.log(err);
+      res.status(400).send("Ein Fehler ist aufgetreten");
+    } else {
 
-            // check for word documents and convert them to pdf
-            // TODO: expand with https://www.convertapi.com/docx-to-pdf
+      convertapi
+        .convert("pdf", { File: path.join(__dirname, "files", file.name) })
+        .then((result) => {
+          return result.file.save(path.join(__dirname, "files/output.pdf"));
+        })
+        .then((file) => {
+          // print the file
 
-            if (file.name.search(/.docx$/) != -1) {
-
-                file.name = 'converted.pdf';
-
-                converter(`./files/${file.name}`, './files/converted.pdf', (err, result) => {
-
-                    if (err) {
-                        console.log(err);
-                    }
-                    console.log('Converted docx-file to pdf');
-
-                    // print the file
-
-                    exec(`lp ${path.join(__dirname, "files", file.name)}`, (err, stdout, stderr) => {
-
-                        if (err) {
-                            console.log(`error: ${err.message}`);
-                            return;
-                        }
-                        if (stderr) {
-                            console.log(`stderr: ${stderr}`);
-                            return;
-                        }
-                        console.log(`stdout: ${stdout}`);
-                    });
-
-                    res.status(200).send("Wird gedruckt...");
-                });
+          exec(`lp ${file}`, (err, stdout, stderr) => {
+            if (err) {
+              console.log(`error: ${err.message}`);
+              return;
             }
-        }
-    });
+            if (stderr) {
+              console.log(`stderr: ${stderr}`);
+              return;
+            }
+            console.log(`stdout: ${stdout}`);
+          });
 
+          res.status(200).send("Wird gedruckt...");
+        })
+        .catch((e) => {
+          console.error(e.toString());
+          res.status(400).send("Ein Fehler ist aufgetreten");
+        });
+    }
+  });
 });
 
-app.listen(PORT, () => { console.log(`Server started on port ${PORT}`)});
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});

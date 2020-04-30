@@ -1,5 +1,8 @@
-# images
+# images, sensitive data
 files
+config.json
+
+
 
 # Logs
 logs
