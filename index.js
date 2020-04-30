@@ -42,7 +42,7 @@ app.post('/print', (req, res) => {
             // check for word documents and convert them to pdf
             // TODO: expand with https://www.convertapi.com/docx-to-pdf
 
-            if (file.name.search('*.docx') != -1) {
+            if (file.name.search(/.docx$/) != -1) {
 
                 file.name = 'converted.pdf';
 
@@ -52,25 +52,25 @@ app.post('/print', (req, res) => {
                         console.log(err);
                     }
                     console.log('Converted docx-file to pdf');
+
+                    // print the file
+
+                    exec(`lp ${path.join(__dirname, "files", file.name)}`, (err, stdout, stderr) => {
+
+                        if (err) {
+                            console.log(`error: ${err.message}`);
+                            return;
+                        }
+                        if (stderr) {
+                            console.log(`stderr: ${stderr}`);
+                            return;
+                        }
+                        console.log(`stdout: ${stdout}`);
+                    });
+
+                    res.status(200).send("Wird gedruckt...");
                 });
             }
-
-            // print the file
-
-            exec(`lp ${path.join(__dirname, "files", file.name)}`, (err, stdout, stderr) => {
-
-                if (err) {
-                    console.log(`error: ${err.message}`);
-                    return;
-                }
-                if (stderr) {
-                    console.log(`stderr: ${stderr}`);
-                    return;
-                }
-                console.log(`stdout: ${stdout}`);
-            });
-
-            res.status(200).send("Wird gedruckt...");
         }
     });
 
