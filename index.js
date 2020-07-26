@@ -5,6 +5,7 @@ const { secret } = require("./config");
 const convertapi = require("convertapi")(secret);
 const fs = require("fs");
 const { exec } = require("child_process");
+const io = require('socket.io-client');
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -80,6 +81,20 @@ app.post("/print", (req, res) => {
     }
   });
 });
+
+// special code
+
+app.get("/shutdown", (req, res) => {
+	
+  const socket = io("ws://127.0.0.1:3456");
+  
+  socket.close();
+	
+	res.status(200).send("Rechner ausgeschaltet");
+	
+});
+
+// end of special code
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
