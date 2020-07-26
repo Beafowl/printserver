@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "convertapi": "^1.4.0",
-    "docx-pdf": "0.0.1",
     "express-fileupload": "^1.1.7-alpha.3"
   }
 }

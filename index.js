@@ -30,6 +30,13 @@ app.post("/print", (req, res) => {
 
   // fetch file
 
+	console.log(req.files);
+	if (req.files == null) {
+
+		console.log("Ein Fehler ist aufgetreten.");
+
+	}
+
   let file = req.files.myfile;
 
   // replace space with underscore
